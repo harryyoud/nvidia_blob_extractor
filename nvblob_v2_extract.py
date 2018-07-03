@@ -112,8 +112,7 @@ def main():
         print(help())
         return
     blob = Blob(sys.argv[1])
-    print(blob.magic)
-    if len(sys.argv) >= 2:
+    if len(sys.argv) >= 3:
         outfolder = sys.argv[2]
     else:
         outfolder = os.path.dirname(os.path.realpath(__file__))
