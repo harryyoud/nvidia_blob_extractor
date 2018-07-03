@@ -1,8 +1,5 @@
 #!/bin/python
-"""
-Extracts NVIDIA blobs
-"""
-
+"""Reads and extracts NVIDIA blob files"""
 import os
 import sys
 import struct
@@ -15,6 +12,22 @@ BLOB_FORMATS =  {
                 }
 
 class Blob(object):
+    """
+    Properties:
+     - str(filename): filename of blob passed to the class
+     - list(magic): first 40 bytes
+            [str(magic), int, int(length_of_file), int(header_size),
+            int(number_of_files), int(0 if "update", 1 if "bmp"),
+            int(0 if compressed)]
+     - bool(is_compressed): is blob compressed
+     - str(type): "update" or "bmp"
+     - list(data): header for files contained in blob
+            [str(partition_name), int(position), int(length)]
+     - str(magic_struct): struct-compatible structure for the blob header
+     - str(chunk_struct): struct-compatible structure for the file headers
+    Methods:
+     - extract(part_num, out): extracts file from blob to out
+    """
     def __init__(self, filename):
         self.filename = filename
         self._magic = None
@@ -64,7 +77,8 @@ class Blob(object):
     @property
     def data(self):
         if self.is_compressed or self.type is 'bmp':
-            raise NotImplementedError("This tool doesn't yet support extraction of bmp or compressed blobs")
+            raise NotImplementedError("This tool doesn't yet support",
+                                      " extraction of bmp or compressed blobs")
         if self._data == None:
             self._data = []
             with open (self.filename, 'rb') as blob:
@@ -82,15 +96,23 @@ class Blob(object):
         return self._data
     def extract(self, part_num, out):
         if self.is_compressed or self.type is 'bmp':
-            raise NotImplementedError("This tool doesn't yet support extraction of bmp or compressed blobs")
+            raise NotImplementedError("This tool doesn't yet support",
+                                      " extraction of bmp or compressed blobs")
         with open(out, 'wb') as output:
             with open(self.filename, 'rb') as blob:
                 blob.seek(self.data[part_num]['pos'])
                 output.write(blob.read(self.data[part_num]['len']))
 
+def help():
+    return ("Usage: ./{} file.blob out_folder/\n"
+            "    By default, extracts to current dir".format(sys.argv[0]))
 
-if __name__ == "__main__":
+def main():
+    if len(sys.argv) <= 1:
+        print(help())
+        return
     blob = Blob(sys.argv[1])
+    print(blob.magic)
     if len(sys.argv) >= 2:
         outfolder = sys.argv[2]
     else:
@@ -109,3 +131,6 @@ if __name__ == "__main__":
                 j += 1
         blob.extract(i, out)
         i += 1
+
+if __name__ == "__main__":
+    main()
